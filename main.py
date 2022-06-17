@@ -6,9 +6,11 @@ from frame import Frame
 
 if __name__ == '__main__':
     cap = cv2.VideoCapture("videos/0.hevc")
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    display2d = FeaturesPreview(width, height)
+    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    display2d = FeaturesPreview(width, height, fps)
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
@@ -17,4 +19,3 @@ if __name__ == '__main__':
             display2d.draw(frame.process(kps))
         else:
             exit(0)
-        print('after')
