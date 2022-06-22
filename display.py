@@ -68,17 +68,17 @@ class Map3d(object):
         self.d_cam = self.d_cam.SetHandler(handler)
         self.queue = queue
         self.time = 0.0
+        self.points = []
         self.run()
-
-    def add_points(self, points):
-        self.points = points
 
     def draw_points(self) -> None:
         color = np.random.random(3)
-        for point in self.queue.get():
-            point_x, point_y, point_z = point[0] / 75, point[1] / 75, 0
-            glColor3d(color[0], color[1], color[2])
-            glVertex3d(point_x, point_y, point_z)
+        self.points.append([color, self.queue.get(), self.time])
+        for history in self.points:
+            for point in history[1]:
+                point_x, point_y, point_z = point[0] / 40, point[1] / 40, history[2]
+                glColor3d(history[0][0], history[0][1], history[0][2])
+                glVertex3d(point_x, point_y, point_z)
     
     def run(self):
         while not pango.ShouldQuit():
