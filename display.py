@@ -3,20 +3,25 @@ import sdl2
 import numpy as np
 import sdl2.sdlgfx
 import pypangolin as pango
+import cv2
+from frame import Frame
 from OpenGL.GL import *
 
 class FeaturesPreview(object):
-    def __init__(self, width: int, hegiht: int, fps: int) -> None:
+    def __init__(self, footage_path, queue) -> None:
         sdl2.ext.init()
-        self.width, self.height = int(width), int(hegiht)
-
-        self.fps = int(fps)
+        self.queue = queue
+        self.cap = cv2.VideoCapture(footage_path)
+        self.width, self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+        self.fps = int(20)
         self.frame_manager = sdl2.sdlgfx.FPSManager()
         sdl2.sdlgfx.SDL_setFramerate(self.frame_manager, self.fps)
         sdl2.sdlgfx.SDL_initFramerate(self.frame_manager)
 
         self.window = sdl2.ext.Window("my_SLAM", size=(self.width, self.height))
         self.window.show()
+        self.view()
 
     def draw(self, frame: np.ndarray) -> None:
         #quit event handler
@@ -32,6 +37,19 @@ class FeaturesPreview(object):
 
         #delaying frame for good fps
         sdl2.sdlgfx.SDL_framerateDelay(self.frame_manager)
+    
+    def view(self):
+        #extracting frames from input, feature extraction, draw wrapper
+        while self.cap.isOpened():
+            ret, frame = self.cap.read()
+            if ret:
+                frame = Frame(np.array(frame))
+                kps, des = frame.extract()
+                export = list(map(lambda kp: (kp.pt[0], kp.pt[1]), kps))
+                self.queue.put(export)
+                self.draw(frame.process(kps))
+            else:
+                exit(0)
 
 class Map3d(object):
     def __init__(self, queue):
